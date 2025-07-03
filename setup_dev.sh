@@ -1,9 +1,9 @@
 #!bin/bash
 # Author:    Tobias Holmes
-# Created:   06/2025
+# Created:   07/2025
 #
 # Description:
-# Sets up a Python virtual environment for the project and installs all required dependencies.
+# Sets up a Python virtual environment for the project and installs all required dev dependencies.
 #
 # Usage:
 # Source this script to set up the environment and activate it in the current shell.:
@@ -30,7 +30,7 @@ echo "✅ Virtual environment activated."
 
 # Install Python dependencies
 echo "🔍 Looking for requirements.txt..."
-if [ ! -f requirements.txt ]; then
+if [ ! -f requirements-dev.txt ]; then
     echo "❌ requirements.txt not found! Please create it with your dependencies. Exiting..."
 else
     echo "✅ requirements.txt found."
