@@ -1,6 +1,22 @@
 import numpy as np
 import pandas as pd
 from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import FunctionTransformer
+from sklearn.pipeline import Pipeline
+
+
+def drop_id_misc_columns(df):
+    """
+    Drop unnecessary columns from the DataFrame.
+
+    Parameters:
+    df (pd.DataFrame): The DataFrame from which to drop columns.
+
+    Returns:
+    pd.DataFrame: DataFrame with specified columns dropped.
+    """
+    columns_to_drop = ["Id", "MiscFeature", "MiscVal"]
+    return df.drop(columns=columns_to_drop, errors="ignore")
 
 
 def impute_missing_values(df):
@@ -63,8 +79,23 @@ def one_hot_encoding(df):
     return pd.get_dummies(df, drop_first=True)
 
 
+def preprocessing_pipeline():
+    return Pipeline(
+        [
+            ("drop_id_misc", FunctionTransformer(drop_id_misc_columns, validate=False)),
+            (
+                "impute_missing",
+                FunctionTransformer(impute_missing_values, validate=False),
+            ),
+            ("one_hot_encode", FunctionTransformer(one_hot_encoding, validate=False)),
+        ]
+    )
+
+
 if __name__ == "__main__":
     import os
+
+    print("The file was called directly. Starting data preprocessing.")
 
     # Get the base directory of the repository
     repo_base = os.popen("git rev-parse --show-toplevel").read().strip()
@@ -80,13 +111,13 @@ if __name__ == "__main__":
     print("📥 Loading data...")
     df = pd.read_csv(os.path.join(repo_base, "data", "data.csv"))
 
-    # Remove Misc columns
+    # Remove ID and Misc columns
     print("🗑️ Removing unnecessary columns (ID, MiscFeature, MiscVal)...")
-    df.drop(columns=["Id", "MiscFeature", "MiscVal"], inplace=True)
+    df_dropped = drop_id_misc_columns(df)
 
     # Imputing
     print("🧹 Imputation data...")
-    df_imputed = impute_missing_values(df)
+    df_imputed = impute_missing_values(df_dropped)
 
     # One-hot encoding
     print("🔠 One-hot encoding categorical variables...")

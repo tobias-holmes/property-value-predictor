@@ -1,6 +1,10 @@
 import numpy as np
 import pandas as pd
-from src.data_preprocessing import impute_missing_values, one_hot_encoding
+from src.data_preprocessing import (
+    impute_missing_values,
+    one_hot_encoding,
+    drop_id_misc_columns,
+)
 
 
 def test_impute_missing_values():
@@ -36,3 +40,25 @@ def test_one_hot_encoding():
     assert (
         df_encoded.shape[1] == 4
     )  # 2 original columns + 2 new one-hot encoded columns (dropping first category)
+
+
+def test_drop_id_misc_columns():
+    # Create sample data
+    data = {
+        "Id": [1, 2, 3, 4],
+        "A": [1, 2, None, 4],
+        "B": ["cat", None, "dog", np.nan],
+        "C": [None, 2.5, 3.5, np.nan],
+        "MiscFeature": ["None", "Shed", None, "Garbage"],
+        "MiscVal": [0, 5000, None, 1000],
+    }
+    df = pd.DataFrame(data)
+
+    # Perform drop
+    df_dropped = drop_id_misc_columns(df)
+
+    # Check if the columns are dropped correctly
+    assert "Id" not in df_dropped.columns
+    assert "MiscFeature" not in df_dropped.columns
+    assert "MiscVal" not in df_dropped.columns
+    assert df_dropped.shape[1] == 3  # Should have 3 columns left (A, B, C)
