@@ -29,8 +29,8 @@ def impute_missing_values(df):
     Returns:
     pd.DataFrame: DataFrame with missing values imputed.
     """
-    # replace None with np.nan for consistency
-    df = df.replace({None: np.nan})
+    # Replace None with np.nan for consistency
+    df = df.replace({None: np.nan}).infer_objects(copy=False)
 
     # Create a copy of the DataFrame to avoid modifying the original
     df_imputed = df.copy(deep=True)
@@ -40,7 +40,7 @@ def impute_missing_values(df):
     categorical_cols = df.select_dtypes(include=["object"]).columns
 
     # Imputer for numerical columns
-    numeric_imputer = SimpleImputer(strategy="mean")
+    numeric_imputer = SimpleImputer(strategy="constant", fill_value=0) #TODO: add keep_empty_feature=True from scikit-learn 1.8 onwards
     if numeric_cols.empty:
         print("No numeric columns to impute.")
     else:
@@ -53,7 +53,7 @@ def impute_missing_values(df):
         )
 
     # Imputer for categorical columns
-    categorical_imputer = SimpleImputer(strategy="constant", fill_value="NA")
+    categorical_imputer = SimpleImputer(strategy="constant", fill_value="NA") #TODO: add keep_empty_feature=True from scikit-learn 1.8 onwards
     if categorical_cols.empty:
         print("No categorical columns to impute.")
     else:
