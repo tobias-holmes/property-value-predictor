@@ -29,13 +29,13 @@ source .venv/bin/activate
 echo "✅ Virtual environment activated."
 
 # Install Python dependencies
-echo "🔍 Looking for requirements.txt..."
+echo "🔍 Looking for requirements-dev.txt..."
 if [ ! -f requirements-dev.txt ]; then
-    echo "❌ requirements.txt not found! Please create it with your dependencies. Exiting..."
+    echo "❌ requirements-dev.txt not found! Please create it with your dependencies. Exiting..."
 else
-    echo "✅ requirements.txt found."
+    echo "✅ requirements-dev.txt found."
     echo "📦 Installing Python dependencies..."
-    pip install -r requirements.txt
+    pip install -r requirements-dev.txt
     echo "✅ Python dependencies installed."
 
     echo "🎉 Setup complete! Your Python virtual environment is ready to use."
