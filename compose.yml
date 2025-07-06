@@ -1,0 +1,10 @@
+---
+services:
+  property-value-predictor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: property-value-predictor
+    ports:
+      - "8080:80"
+    restart: unless-stopped
