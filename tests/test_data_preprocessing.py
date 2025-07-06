@@ -1,3 +1,23 @@
+"""
+Pytest test suite for data preprocessing functions in src.data_preprocessing.
+
+Tests include:
+- impute_missing_values: checks correct imputation of missing values in numeric and categorical columns.
+- one_hot_encoding: verifies one-hot encoding of categorical variables with drop-first category.
+- drop_id_misc_columns: ensures specified columns ('Id', 'MiscFeature', 'MiscVal') are removed properly.
+- get_preprocessing_pipeline: tests the full preprocessing pipeline output, validating numeric scaling and encoding.
+- test_get_preprocessing_pipeline_with_data: integration test using real dataset CSV, marked as slow.
+
+General:
+- Uses pandas, numpy and pytest.
+- Suppresses pandas future warnings about silent downcasting.
+- Validates output types, missing data handling, and expected transformations.
+- Includes a slow integration test that requires external CSV file.
+
+Author: Tobias Holmes
+Date: 2025-07
+"""
+
 import numpy as np
 import pytest
 import pandas as pd
@@ -12,6 +32,11 @@ from src.data_preprocessing import (
 pd.set_option("future.no_silent_downcasting", True)
 
 def test_impute_missing_values():
+    """
+    Test that missing values are correctly imputed in numeric and categorical columns.
+    Checks that no NaNs remain after imputation.
+    """
+
     # Create a sample DataFrame with missing values
     data = {
         "A": [1, 2, None, 4],
@@ -32,6 +57,12 @@ def test_impute_missing_values():
 
 
 def test_one_hot_encoding():
+    """"
+     Test one-hot encoding on categorical columns.
+    Verifies first category is dropped (reference category),
+    and expected new columns appear.    
+    """
+
     # Create a sample DataFrame with categorical data
     data = {"A": ["cat", "mouse", "dog", "horse"], "B": [1, 2, 3, 4]}
     df = pd.DataFrame(data)
@@ -49,6 +80,11 @@ def test_one_hot_encoding():
 
 
 def test_drop_id_misc_columns():
+    """
+    Test dropping of 'Id', 'MiscFeature', and 'MiscVal' columns.
+    Verifies those columns are removed and others remain intact.
+    """
+
     # Create sample data
     data = {
         "Id": [1, 2, 3, 4],
@@ -70,6 +106,18 @@ def test_drop_id_misc_columns():
     assert df_dropped.shape[1] == 3  # Should have 3 columns left (A, B, C)
 
 def test_get_preprocessing_pipeline():
+    """
+    Test the full preprocessing pipeline with numeric and categorical data,
+    including imputation, scaling (standard and minmax), and encoding.
+
+    Checks:
+    - Output is numpy ndarray
+    - No missing values after transform
+    - Output dimensions greater than numeric-only input
+    - Output dtype is numeric
+    - MinMax scaled output lies between 0 and 1
+    """
+
     # Create a sample DataFrame with numeric and categorical columns, and missing values
     data = {
         "Id": [1, 2, 3, 4],
@@ -107,6 +155,13 @@ def test_get_preprocessing_pipeline():
 
 @pytest.mark.slow
 def test_get_preprocessing_pipeline_with_data():
+    """
+    Slow integration test on actual data from CSV file.
+
+    Validates full preprocessing pipeline can fit and transform the real dataset
+    with no missing values and expected numeric output.
+    """
+
     # Get data from CSV file
     df = pd.read_csv("data/data.csv")
    

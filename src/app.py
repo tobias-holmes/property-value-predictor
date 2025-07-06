@@ -1,3 +1,17 @@
+"""
+FastAPI Service for Property Value Prediction
+
+This API loads a pre-trained machine learning pipeline and exposes
+an endpoint to predict house value based on property features.
+
+Endpoints:
+- GET /       : Simple health check endpoint.
+- POST /predict : Accepts property features as JSON, returns predicted price.
+
+Author: Tobias Holmes
+Date: 2025-07
+"""
+
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
 from typing import Optional
@@ -5,15 +19,26 @@ import pandas as pd
 import os
 import joblib
 
+# Init API instance
 app = FastAPI()
 
-# Load trained pipeline with correct import assumptions
+# Define project root and model path dynamically
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 model_path = os.path.join(PROJECT_ROOT, "models", "pipeline.joblib")
+
+# Load the pre-trained pipeline model
 model = joblib.load(model_path)
 
 # Pydantic input definitions
 class PropertyFeatures(BaseModel):
+    """
+    Pydantic model defining input schema for property features.
+    
+    Fields correspond to the dataset columns used for prediction.
+    Optional fields allow missing values for some features.
+    
+    Uses Field with alias for fields starting with digits.
+    """
     MSSubClass: int
     MSZoning: str
     LotFrontage: Optional[float] = None
@@ -56,6 +81,7 @@ class PropertyFeatures(BaseModel):
     HeatingQC: str
     CentralAir: str
     Electrical: str
+    # Fields starting with digits need alias, e.g., "1stFlrSF"
     firstFlrSF: Optional[int]  = Field(...,alias="1stFlrSF") # can't start with digit, add underscore
     secondFlrSF: Optional[int] = Field(...,alias="2ndFlrSF")
     LowQualFinSF: int
@@ -95,25 +121,45 @@ class PropertyFeatures(BaseModel):
     SaleCondition: str
 
     model_config = {
-        "populate_by_name": True,
-        "from_attributes": True,
+        "populate_by_name": True,  # Allow population by alias or attribute name
+        "from_attributes": True,   # Allow creation from arbitrary objects with attributes
     }
 
 
-# Simple health message
 @app.get("/")
 def read_root() -> dict:
-    return {"message" : "Property Price Predictor is running"}
+    """
+    Health check endpoint.
 
-# Inference
+    Returns:
+    -------
+    dict
+        Status message confirming the service is running.
+    """
+    return {"message" : "Property Value Predictor is running"}
+
 @app.post("/predict")
 def predict(data: PropertyFeatures, decimals: int = 2) -> dict:
-    # Convert incoming data to DataFrame for the pipeline
+    """
+    Endpoint to predict the sale value of a property.
+
+    Parameters:
+    ----------
+    data : PropertyFeatures
+        Validated input property features.
+    decimals : int, optional
+        Number of decimal places for prediction. Defaults to 2.
+
+    Returns:
+    -------
+    dict
+        Predicted value rounded to the specified decimals.
+    """
+    
+    # Convert input data to DataFrame for the pipeline
     df = pd.DataFrame([data.model_dump(by_alias=True)])
 
-    print(df.columns)
-
-    # Perform inference
+    # Use loaded model to predict value
     prediction = model.predict(df)
 
     return {"predicted price": round(prediction[0], decimals)}

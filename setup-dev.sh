@@ -1,6 +1,6 @@
 #!bin/bash
 # Author:    Tobias Holmes
-# Created:   07/2025
+# Created:   2025-07
 #
 # Description:
 # Sets up a Python virtual environment for the project and installs all required dev dependencies.

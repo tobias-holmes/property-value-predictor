@@ -1,3 +1,14 @@
+"""
+Data Preprocessing Utilities for Property Value Prediction
+
+This module provides reusable functions and pipelines to clean,
+impute, encode, and scale tabular property data, preparing it
+for machine learning models.
+
+Author: Tobias Holmes
+Date: 2025-07
+"""
+
 import numpy as np
 import pandas as pd
 from sklearn.impute import SimpleImputer
@@ -11,7 +22,9 @@ class DropColumns(BaseEstimator, TransformerMixin):
     Custom transformer to drop specified columns from a DataFrame.
     
     Parameters:
-    columns (list): List of column names to drop.
+    ----------
+    columns : list
+        List of column names to drop.
     """
     def __init__(self, columns):
         self.columns = columns
@@ -27,10 +40,14 @@ def drop_id_misc_columns(df: pd.DataFrame) -> pd.DataFrame:
     Drop unnecessary columns from the DataFrame.
 
     Parameters:
-    df (pd.DataFrame): The DataFrame from which to drop columns.
+    ----------
+    df : pd.DataFrame
+        The DataFrame from which to drop columns.
 
     Returns:
-    pd.DataFrame: DataFrame with specified columns dropped.
+    -------
+    pd.DataFrame
+        DataFrame with specified columns dropped.
     """
     columns_to_drop = ["Id", "MiscFeature", "MiscVal"]
     return df.drop(columns=columns_to_drop, errors="ignore")
@@ -40,11 +57,18 @@ def impute_missing_values(df: pd.DataFrame) -> pd.DataFrame:
     """
     Impute missing values in the DataFrame.
 
+    Numerical columns replaced with 0
+    Categorical columns replaced with "NA"
+
     Parameters:
-    df (pd.DataFrame): The DataFrame with missing values.
+    ----------
+    df : pd.DataFrame
+        The DataFrame with missing values.
 
     Returns:
-    pd.DataFrame: DataFrame with missing values imputed.
+    -------
+    pd.DataFrame
+        DataFrame with missing values imputed.
     """
     # Replace None with np.nan for consistency. Infer objects to ensure correct data types.
     df = df.replace({None: np.nan}).infer_objects(copy=False)
@@ -88,10 +112,13 @@ def one_hot_encoding(df: pd.DataFrame) -> pd.DataFrame:
     Perform one-hot encoding on categorical columns in the DataFrame.
 
     Parameters:
-    df (pd.DataFrame): The DataFrame to encode.
+    df : pd.DataFrame
+        The DataFrame to encode.
 
     Returns:
-    pd.DataFrame: DataFrame with one-hot encoded categorical columns.
+    -------
+    pd.DataFrame
+        DataFrame with one-hot encoded categorical columns.
     """
     # Get categorical columns
     categorical_cols = df.select_dtypes(include=["object"]).columns
@@ -105,6 +132,22 @@ def one_hot_encoding(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def get_preprocessing_pipeline(df: pd.DataFrame, scaler: str = "standard") -> Pipeline:
+    """
+    Create a preprocessing pipeline that drops unnecessary columns, imputes missing values, 
+    encodes categorical variables, and scales numerical features.
+
+    Parameters:
+    ----------
+    df : pd.DataFrame
+        Input DataFrame to determine columns.
+    scaler : str, default="standard"
+        Type of scaler to use: "standard" (StandardScaler) or "minmax" (MinMaxScaler).
+
+    Returns:
+    -------
+    sklearn.pipeline.Pipeline
+        Configured preprocessing pipeline.
+    """
     df_dropped = drop_id_misc_columns(df)
     numeric_cols = df_dropped.select_dtypes(include=["number"]).columns
     categorical_cols = df_dropped.select_dtypes(include=["object"]).columns
@@ -141,7 +184,15 @@ def get_preprocessing_pipeline(df: pd.DataFrame, scaler: str = "standard") -> Pi
     ])
 
 
+# ----------------- Script Entry Point -----------------
+
 if __name__ == "__main__":
+    """"
+        Run the preprocessing steps if the script is executed directly.
+    It loads raw data, applies cleaning, imputation, encoding, and scaling, 
+    and saves the processed results to the 'data' directory for both the functional
+    and pipeline approach.    
+    """
     import os
 
     print("The file was called directly. Starting data preprocessing.")
