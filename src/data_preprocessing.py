@@ -22,7 +22,7 @@ class DropColumns(BaseEstimator, TransformerMixin):
     def transform(self, X):
         return X.drop(columns=self.columns, errors="ignore")
 
-def drop_id_misc_columns(df):
+def drop_id_misc_columns(df: pd.DataFrame) -> pd.DataFrame:
     """
     Drop unnecessary columns from the DataFrame.
 
@@ -36,7 +36,7 @@ def drop_id_misc_columns(df):
     return df.drop(columns=columns_to_drop, errors="ignore")
 
 
-def impute_missing_values(df):
+def impute_missing_values(df: pd.DataFrame) -> pd.DataFrame:
     """
     Impute missing values in the DataFrame.
 
@@ -83,7 +83,7 @@ def impute_missing_values(df):
     return df_imputed
 
 
-def one_hot_encoding(df):
+def one_hot_encoding(df: pd.DataFrame) -> pd.DataFrame:
     """
     Perform one-hot encoding on categorical columns in the DataFrame.
 
@@ -104,7 +104,7 @@ def one_hot_encoding(df):
     return pd.concat([df_non_cat, encoded_df], axis=1)
 
 
-def get_preprocessing_pipeline(df, scaler="standard"):
+def get_preprocessing_pipeline(df: pd.DataFrame, scaler: str = "standard") -> Pipeline:
     df_dropped = drop_id_misc_columns(df)
     numeric_cols = df_dropped.select_dtypes(include=["number"]).columns
     categorical_cols = df_dropped.select_dtypes(include=["object"]).columns
