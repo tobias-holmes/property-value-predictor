@@ -21,7 +21,7 @@ preprocessing = get_preprocessing_pipeline(X, scaler="standard") # TODO: passing
 pipeline = Pipeline(
     [
         ("preprocessing", preprocessing),
-        ("pca", PCA(n_components=125)),
+        ("pca", PCA(n_components=125)), # TODO: Gridsearch for best PCA value
         ("model", LinearRegression(fit_intercept=True)),
     ]
 )
