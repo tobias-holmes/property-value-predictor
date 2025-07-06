@@ -4,6 +4,7 @@
 #
 # Description:
 # Sets up a Python virtual environment for the project and installs all required dev dependencies.
+# Adds src to PYTHONPATH
 #
 # Usage:
 # Source this script to set up the environment and activate it in the current shell.:
@@ -40,3 +41,8 @@ else
 
     echo "🎉 Setup complete! Your Python virtual environment is ready to use."
 fi
+
+# Add src to PYTHONPATH
+echo "Adding src to PYTHONPATH"
+export PYTHONPATH=./src
+echo "Done. :-)"
