@@ -5,6 +5,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.decomposition import PCA
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
+from sklearn.model_selection import cross_val_score, KFold
 
 # Load data and setting target/label variable
 df = pd.read_csv("data/data.csv")
@@ -21,7 +22,7 @@ preprocessing = get_preprocessing_pipeline(X, scaler="standard") # TODO: passing
 pipeline = Pipeline(
     [
         ("preprocessing", preprocessing),
-        ("pca", PCA(n_components=125)), # TODO: Gridsearch for best PCA value
+        ("pca", PCA(n_components=0.95)), # TODO: Gridsearch for best PCA value?
         ("model", LinearRegression(fit_intercept=True)),
     ]
 )
@@ -33,7 +34,17 @@ pipeline.fit(X_train, y_train)
 score = pipeline.score(X_test, y_test)
 print(f"Model R^2 score: {score:.4f}")
 
-#Save the model
+# Save the simple model/pipeline
 joblib.dump(pipeline, "models/pipeline.joblib")
-# joblib.dump(pipeline.named_steps["pca"], "models/model.joblib")
+joblib.dump(pipeline.named_steps["pca"], "models/pca.joblib")
 joblib.dump(pipeline.named_steps["model"], "models/model.joblib")
+
+
+# K-fold cross validation for testing 
+kf = KFold(n_splits=5, shuffle=True, random_state=42)
+
+score_kf = cross_val_score(pipeline, X, y , cv=kf, scoring="r2")
+
+print(f"Cross-validation R^2 scores: {score_kf}")
+print(f"Mean R^2 score: {score_kf.mean():.4f}")
+
