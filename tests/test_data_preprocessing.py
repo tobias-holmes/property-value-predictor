@@ -81,20 +81,29 @@ def test_get_preprocessing_pipeline():
     }
     df = pd.DataFrame(data)
 
-    # Get pipeline
-    pipeline = get_preprocessing_pipeline(df)
+    # Get pipelines with different scalers
+    pipeline = get_preprocessing_pipeline(df, scaler="standard")
+    pipeline_minmax = get_preprocessing_pipeline(df, scaler="minmax")
+
 
     # Fit and transform
     X_out = pipeline.fit_transform(df)
+    X_out_minmax = pipeline_minmax.fit_transform(df)
 
     # Check output type
     assert isinstance(X_out, np.ndarray)
+    assert isinstance(X_out_minmax, np.ndarray)
     # Check if the output has no missing columns
     assert np.isnan(X_out).sum() == 0
+    assert np.isnan(X_out_minmax).sum() == 0
     # Should have more columns than just the numeric ones
     assert X_out.shape[1] > 2
+    assert X_out_minmax.shape[1] > 2
     # Check that all columns are numeric (float or int)
     assert np.issubdtype(X_out.dtype, np.number)
+    assert np.issubdtype(X_out_minmax.dtype, np.number)
+    # Check that minmax scaler output is no larger than 1
+    assert np.all((X_out_minmax >= 0) & (X_out_minmax <= 1))
 
 @pytest.mark.slow
 def test_get_preprocessing_pipeline_with_data():
