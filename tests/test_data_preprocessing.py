@@ -1,9 +1,11 @@
 import numpy as np
+import pytest
 import pandas as pd
 from src.data_preprocessing import (
     impute_missing_values,
     one_hot_encoding,
     drop_id_misc_columns,
+    get_preprocessing_pipeline,
 )
 
 # Deactivate silent downcasting warnings
@@ -66,3 +68,50 @@ def test_drop_id_misc_columns():
     assert "MiscFeature" not in df_dropped.columns
     assert "MiscVal" not in df_dropped.columns
     assert df_dropped.shape[1] == 3  # Should have 3 columns left (A, B, C)
+
+def test_get_preprocessing_pipeline():
+    # Create a sample DataFrame with numeric and categorical columns, and missing values
+    data = {
+        "Id": [1, 2, 3, 4],
+        "A": [1, 2, None, 4],
+        "B": ["cat", None, "dog", np.nan],
+        "C": [None, 2.5, 3.5, np.nan],
+        "MiscFeature": ["None", "Shed", None, "Garbage"],
+        "MiscVal": [0, 5000, None, 1000],
+    }
+    df = pd.DataFrame(data)
+
+    # Get pipeline
+    pipeline = get_preprocessing_pipeline(df)
+
+    # Fit and transform
+    X_out = pipeline.fit_transform(df)
+
+    # Check output type
+    assert isinstance(X_out, np.ndarray)
+    # Check if the output has no missing columns
+    assert np.isnan(X_out).sum() == 0
+    # Should have more columns than just the numeric ones
+    assert X_out.shape[1] > 2
+    # Check that all columns are numeric (float or int)
+    assert np.issubdtype(X_out.dtype, np.number)
+
+@pytest.mark.slow
+def test_get_preprocessing_pipeline_with_data():
+    # Get data from CSV file
+    df = pd.read_csv("data/data.csv")
+   
+    # Get pipeline
+    pipeline = get_preprocessing_pipeline(df)
+
+    # Fit and transform
+    X_out = pipeline.fit_transform(df)
+
+    # Check output type
+    assert isinstance(X_out, np.ndarray)
+    # Check if the output has no missing columns
+    assert np.isnan(X_out).sum() == 0
+    # Should have more columns than just the numeric ones
+    assert X_out.shape[1] > 2
+    # Check that all columns are numeric (float or int)
+    assert np.issubdtype(X_out.dtype, np.number)

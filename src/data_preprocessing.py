@@ -1,9 +1,26 @@
 import numpy as np
 import pandas as pd
 from sklearn.impute import SimpleImputer
-from sklearn.preprocessing import FunctionTransformer
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
+from sklearn.base import BaseEstimator, TransformerMixin
 
+class DropColumns(BaseEstimator, TransformerMixin):
+    """
+    Custom transformer to drop specified columns from a DataFrame.
+    
+    Parameters:
+    columns (list): List of column names to drop.
+    """
+    def __init__(self, columns):
+        self.columns = columns
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X):
+        return X.drop(columns=self.columns, errors="ignore")
 
 def drop_id_misc_columns(df):
     """
@@ -29,7 +46,7 @@ def impute_missing_values(df):
     Returns:
     pd.DataFrame: DataFrame with missing values imputed.
     """
-    # Replace None with np.nan for consistency
+    # Replace None with np.nan for consistency. Infer objects to ensure correct data types.
     df = df.replace({None: np.nan}).infer_objects(copy=False)
 
     # Create a copy of the DataFrame to avoid modifying the original
@@ -76,20 +93,38 @@ def one_hot_encoding(df):
     Returns:
     pd.DataFrame: DataFrame with one-hot encoded categorical columns.
     """
-    return pd.get_dummies(df, drop_first=True)
+    # Get categorical columns
+    categorical_cols = df.select_dtypes(include=["object"]).columns
+
+    encoder = OneHotEncoder(handle_unknown="ignore", drop="first", sparse_output=False)
+    encoded = encoder.fit_transform(df[categorical_cols])
+    encoded_df = pd.DataFrame(encoded, columns=encoder.get_feature_names_out(categorical_cols), index=df.index)
+    # Drop original categorical columns and concat encoded
+    df_non_cat = df.drop(columns=categorical_cols)
+    return pd.concat([df_non_cat, encoded_df], axis=1)
 
 
-def preprocessing_pipeline():
-    return Pipeline(
-        [
-            ("drop_id_misc", FunctionTransformer(drop_id_misc_columns, validate=False)),
-            (
-                "impute_missing",
-                FunctionTransformer(impute_missing_values, validate=False),
-            ),
-            ("one_hot_encode", FunctionTransformer(one_hot_encoding, validate=False)),
-        ]
-    )
+def get_preprocessing_pipeline(df):
+    df_dropped = drop_id_misc_columns(df)
+    numeric_cols = df_dropped.select_dtypes(include=["number"]).columns
+    categorical_cols = df_dropped.select_dtypes(include=["object"]).columns
+
+    # Pipeline for categorical columns: impute, then encode
+    cat_pipeline = Pipeline([
+        ("impute", SimpleImputer(strategy="constant", fill_value="NA")),
+        ("encode", OneHotEncoder(handle_unknown="ignore", drop="first", sparse_output=False))
+    ])
+
+    # Column transformer to apply numerical imputation and categorical processing
+    col_transformer = ColumnTransformer([
+        ("numeric_impute", SimpleImputer(strategy="constant", fill_value=0), numeric_cols),
+        ("cat_pipeline", cat_pipeline, categorical_cols)
+    ])
+
+    return Pipeline([
+            ("drop_id_misc", DropColumns(columns=["Id", "MiscFeature", "MiscVal"])),
+            ("col_transformer", col_transformer),
+    ])
 
 
 if __name__ == "__main__":
@@ -126,6 +161,18 @@ if __name__ == "__main__":
     print("✅ Data preprocessing complete. Saving the processed data...")
     df_encoded.to_csv(
         os.path.join(repo_base, "data", "data_processed.csv"),
+        index=False,
+    )
+    
+    # Process data with pipeline
+    print("🔄 Processing data with preprocessing pipeline...")
+    preprocessing_pipeline = get_preprocessing_pipeline(df)
+    df_processed = preprocessing_pipeline.fit_transform(df)
+    df_processed = pd.DataFrame(df_processed, columns=preprocessing_pipeline.named_steps['col_transformer'].get_feature_names_out())
+
+    print("✅ Data preprocessing with pipeline complete. Saving the processed data...")
+    df_processed.to_csv(
+        os.path.join(repo_base, "data", "data_processed_pipeline.csv"),
         index=False,
     )
 
