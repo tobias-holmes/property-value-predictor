@@ -15,13 +15,13 @@ X = df.drop(columns=["SalePrice"])
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 # Load preprocessing pipeline
-preprocessing = get_preprocessing_pipeline(X) # TODO: passing X here might not be ideal
+preprocessing = get_preprocessing_pipeline(X, scaler="standard") # TODO: passing X here might not be ideal
 
 # Create full pipeline
 pipeline = Pipeline(
     [
         ("preprocessing", preprocessing),
-        # ("pca", PCA(n_components=2)),
+        ("pca", PCA(n_components=125)),
         ("model", LinearRegression(fit_intercept=True)),
     ]
 )

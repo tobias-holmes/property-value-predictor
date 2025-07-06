@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from sklearn.impute import SimpleImputer
-from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import OneHotEncoder, StandardScaler, MinMaxScaler
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -104,20 +104,34 @@ def one_hot_encoding(df):
     return pd.concat([df_non_cat, encoded_df], axis=1)
 
 
-def get_preprocessing_pipeline(df):
+def get_preprocessing_pipeline(df, scaler="standard"):
     df_dropped = drop_id_misc_columns(df)
     numeric_cols = df_dropped.select_dtypes(include=["number"]).columns
     categorical_cols = df_dropped.select_dtypes(include=["object"]).columns
 
-    # Pipeline for categorical columns: impute, then encode
+    # Select scaler based on input
+    if scaler == "standard":
+        scaler_step = StandardScaler()
+    elif scaler == "minmax":
+        scaler_step = MinMaxScaler()
+    else:
+        raise ValueError(f"Unknown scaler option: {scaler}")
+
+    # Pipeline for numerical columns: impute then scale
+    num_pipeline = Pipeline([
+        ("num_impute", SimpleImputer(strategy="constant", fill_value=0)),
+        ("scale", scaler_step)
+    ])
+
+    # Pipeline for categorical columns: impute then encode
     cat_pipeline = Pipeline([
-        ("impute", SimpleImputer(strategy="constant", fill_value="NA")),
+        ("cat_impute", SimpleImputer(strategy="constant", fill_value="NA")),
         ("encode", OneHotEncoder(handle_unknown="ignore", drop="first", sparse_output=False))
     ])
 
-    # Column transformer to apply numerical imputation and categorical processing
+    # Column transformer to apply num and cat pipeline in parallel
     col_transformer = ColumnTransformer([
-        ("numeric_impute", SimpleImputer(strategy="constant", fill_value=0), numeric_cols),
+        ("num_pipeline", num_pipeline, numeric_cols),
         ("cat_pipeline", cat_pipeline, categorical_cols)
     ])
 
