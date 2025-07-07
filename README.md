@@ -66,7 +66,7 @@ cd property-value-predictor
 bash setup-dev.sh
 ```
 
-### Useage
+### Usage
 
 #### Training the Model
 Run the training script to preprocess data, train the model pipeline, and save artifacts:
@@ -131,7 +131,7 @@ pytest
 
 ## Outlook
 
-* The cross-validation shows an obviously weak fold and some empty columns which suggests that there are sparsey filled collumns that are potentially not correctly addressed by the preprocessing pipeline due to the train-test split.
+* The cross-validation shows an obviously weak fold and some empty columns which suggests that there are sparsey filled columns that are potentially not correctly addressed by the preprocessing pipeline due to the train-test split.
 
 * The inference service currently only accepts a single set of features as input. This could be expanded to allow bulk inference.
 
